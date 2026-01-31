@@ -1,22 +1,20 @@
 name: Port Jira Ocean Integration
 on:
   schedule:
-    - cron: '*/30 * * * *' # Runs every 30 mins to keep data in sync
-  workflow_dispatch:       # Allows you to click a button to run it manually
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
 
 jobs:
   ocean-jira:
     runs-on: ubuntu-latest
     steps:
       - name: Run Port Ocean Jira Integration
-        uses: port-labs/port-ocean-jira@v1
+        uses: port-labs/port-ocean-integration-action@v1
         with:
           port_client_id: ${{ secrets.PORT_CLIENT_ID }}
           port_client_secret: ${{ secrets.PORT_CLIENT_SECRET }}
-          jira_host: ${{ secrets.OCEAN_JIRA_HOST }}
-          jira_email: ${{ secrets.OCEAN_JIRA_USER }}
-          jira_token: ${{ secrets.OCEAN_JIRA_TOKEN }}
-          ocean_config: |
+          identifier: "jira"  # Tells the action to use the Jira integration
+          config: |
             resources:
               - kind: project
                 selector:
@@ -44,6 +42,10 @@ jobs:
                         assignee: .fields.assignee.displayName
                         priority: .fields.priority.name
                       relations:
-                        # THIS IS THE KEY PART FOR THE ASSIGNMENT
-                        # It maps the Jira Component Name -> Port Repository Identifier
+                        # The mapping logic for the assignment
                         repository: .fields.components[].name
+        env:
+          # Mapping the secrets to the names the Jira integration expects
+          JIRA_HOST: ${{ secrets.OCEAN_JIRA_HOST }}
+          JIRA_EMAIL: ${{ secrets.OCEAN_JIRA_USER }}
+          JIRA_TOKEN: ${{ secrets.OCEAN_JIRA_TOKEN }}
